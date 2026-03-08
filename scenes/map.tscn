@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://b6fnrexka0b7i"]
+
+[ext_resource type="PackedScene" uid="uid://dttagtloi66ev" path="res://assets/map/Bridge.glb" id="1_paxxb"]
+[ext_resource type="PackedScene" uid="uid://4fs0ukffdrbo" path="res://assets/map/Cell.glb" id="2_gldc4"]
+
+[node name="Map" type="Node3D" unique_id=1498413072]
+
+[node name="Bridge" parent="." unique_id=313541132 instance=ExtResource("1_paxxb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04213476, 0, 0.023129225)
+
+[node name="Cell" parent="." unique_id=1651757380 instance=ExtResource("2_gldc4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.034908652, 0, 0.11695409)
