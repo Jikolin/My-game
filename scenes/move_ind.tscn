@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://brr2svx0rmk31"]
+
+[ext_resource type="Script" uid="uid://bomfpdjqv0jr0" path="res://scripts/move_indicator.gd" id="1_imji4"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ux8wg"]
+size = Vector3(1, 2.2440186, 1)
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_imji4"]
+transparency = 1
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_color = Color(0, 1, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yixx4"]
+material = SubResource("ORMMaterial3D_imji4")
+
+[node name="Area3D" type="Area3D" unique_id=2116416500]
+script = ExtResource("1_imji4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1920062815]
+transform = Transform3D(1, 0, 0, 0, 0.4, 0, 0, 0, 1, 0, 0.24880372, 0)
+shape = SubResource("BoxShape3D_ux8wg")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2121132539]
+transform = Transform3D(1, 0, 0, 0, 0.2, 0, 0, 0, 1, 0, 0, 0)
+transparency = 0.5
+mesh = SubResource("BoxMesh_yixx4")
