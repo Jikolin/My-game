@@ -2,63 +2,94 @@ extends CharacterBody3D
 class_name Player
 
 
-var step_speed = 3
-var step_size = 2
-var is_moving = false
-var target_pos = Vector3.ZERO
-var animation_p: AnimationPlayer
+var step_speed := 3
+const step_size := 2
+var is_moving := false
+var target_pos := Vector3.ZERO
+var target_rot := Basis.IDENTITY
+
+var move_indicator = preload("res://scenes/move_ind.tscn")
+var indicators_container := Node3D.new()
 
 var map_grid: Array
 enum CellType { WALL, BRIDGE, ROOM, START }
+const DIRECTIONS = [
+	Vector2i(0, 1),
+	Vector2i(1, 0),
+	Vector2i(0, -1),
+	Vector2i(-1, 0)
+]
 
 
-func _ready() -> void:
-	#animation_p = $Model/AnimationPlayer
-	#animation_p.speed_scale = 2.0
-	pass
+func setup(i_map_grid: Array, pos: Vector2i) -> void:
+	map_grid = i_map_grid
+	position = Vector3(pos.x + 0.5, 0.0, pos.y + 0.5)
+	target_pos = position
+	target_rot = Basis.looking_at(Vector3.FORWARD)
 
-
-func _physics_process(delta: float) -> void:
-	if is_moving:
-		#animation_p.play("2762272363296_TempMotion")
-		var new_pos = position.move_toward(target_pos, step_speed * delta)
-		position = new_pos
-		
-		if position.distance_to(target_pos) < 0.01:
-			position = target_pos
-			is_moving = false
-	else:
-		#animation_p.stop()
-		pass
+	add_child(indicators_container)
+	indicators_container.top_level = true
+	_show_poss_moves()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("right"):
-		_try_move(Vector3(step_size, 0.0, 0.0))
+		_try_move(Vector3(1, 0, 0))
 	elif event.is_action_pressed("left"):
-		_try_move(Vector3(-step_size, 0.0, 0.0))
+		_try_move(Vector3(-1, 0, 0))
 	elif event.is_action_pressed("up"):
-		_try_move(Vector3(0.0, 0.0, -step_size))
+		_try_move(Vector3(0, 0, -1))
 	elif event.is_action_pressed("down"):
-		_try_move(Vector3(0.0, 0.0, step_size))
+		_try_move(Vector3(0, 0, 1))
 
 
-func _try_move(dir: Vector3) -> void:
-	if _move_is_possible(dir) and !is_moving:
-		$".".basis = Basis.looking_at(-dir)
+func _try_move(direction: Vector3):
+	if _is_move_possible(direction) and !is_moving:
+		_clear_indicators()
 		is_moving = true
-		target_pos += dir
+		target_pos += Vector3(direction.x, direction.y, direction.z) * step_size
+		target_rot = Basis.looking_at(-direction, Vector3.UP)
 
 
-func _move_is_possible(dir: Vector3) -> bool:
-	var grid_pos = Vector2i(floor(position.x), floor(position.z))
-	var grid_dir = Vector2i(dir.x / step_size, dir.z / step_size)
-	var new_grid_pos = grid_pos + grid_dir
+func _physics_process(delta: float) -> void:
+	if is_moving:
+		var new_pos = position.move_toward(target_pos, step_speed * delta)
+		var curr_basis = basis
+		position = new_pos
+		basis = curr_basis.slerp(target_rot, 0.25)
 
-	if new_grid_pos.y < 0 or new_grid_pos.y >= map_grid.size():
+		if position.distance_to(target_pos) < 0.01:
+			position = target_pos
+			is_moving = false
+			_show_poss_moves()
+
+
+func _is_move_possible(direction: Vector3) -> bool:
+	var grid_pos = Vector2(position.x - 0.5 + direction.x, position.z - 0.5 + direction.z)
+	if grid_pos.x < 0 or grid_pos.x >= map_grid.size():
 		return false
-	if new_grid_pos.x < 0 or new_grid_pos.x >= map_grid[0].size():
+	elif grid_pos.y < 0 or grid_pos.y >= map_grid[0].size():
 		return false
 
-	var new_cell = map_grid[new_grid_pos.y][new_grid_pos.x]
-	return new_cell in [CellType.ROOM, CellType.START, CellType.BRIDGE]
+	return map_grid[grid_pos.x][grid_pos.y] in [CellType.START, CellType.BRIDGE, CellType.ROOM]
+
+
+func _show_poss_moves() -> void:
+	if not is_inside_tree():
+		pass
+	for dir in DIRECTIONS:
+		if _is_move_possible(Vector3(dir.x, 0, dir.y)):
+			var indicator = move_indicator.instantiate()
+			indicators_container.add_child(indicator)
+			indicator.global_position = Vector3(position.x + dir.x, 0, position.z + dir.y)
+			indicator.move_to.connect(_move_to)
+			indicator.dir = Vector3(dir.x, 0, dir.y)
+
+
+func _move_to(direction: Vector3) -> void:
+	_try_move(direction)
+
+
+func _clear_indicators() -> void:
+	for child in indicators_container.get_children():
+		child.queue_free()

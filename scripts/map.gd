@@ -21,13 +21,13 @@ class Cell:
 
 var width: int
 var height: int
-var s_cell = Vector2i.ZERO
+var s_cell := Vector2i.ZERO
 var grid: Array = []
 
 const DIRECTIONS = [
-	Vector2i(0, -1),	#UP
+	Vector2i(0, 1),		#UP
 	Vector2i(1, 0), 	#RIGHT
-	Vector2i(0, 1), 	#DOWN
+	Vector2i(0, -1), 	#DOWN
 	Vector2i(-1, 0)		#LEFT
 ]
 
@@ -96,9 +96,9 @@ func get_poss_cells(coords: Vector2i) -> Array:
 
 
 func generate_labyrinth() -> void:
-	var curr_cell = s_cell
-	var priority_cells = [curr_cell]
-	var content_value = height * width * 0.5
+	var curr_cell := s_cell
+	var priority_cells := [curr_cell]
+	var content_value := height * width * 0.5
 
 	for _i in range(content_value):
 		var way_lenght = randi_range(3, 5)
@@ -122,7 +122,7 @@ func generate_labyrinth() -> void:
 
 
 func build_grid_map() -> GridMap:
-	var grid_map = GridMap.new()
+	var grid_map := GridMap.new()
 	grid_map.cell_size = Vector3(1.0, 0.375, 1.0)
 	grid_map.mesh_library = load("res://assets/map/labyrinth.tres")
 	for y in range(height):
@@ -148,11 +148,10 @@ func build_grid_map() -> GridMap:
 
 
 func get_simple_grid() -> Array:
-	var simple_grid = []
-	for y in range(height):
-		var row = []
-		for x in range(width):
-			row.append(grid[y][x].type)
-		simple_grid.append(row)
-
+	var simple_grid := []
+	for x in range(width):  
+		var column = []
+		for y in range(height):  
+			column.append(grid[y][x].type)
+		simple_grid.append(column)
 	return simple_grid

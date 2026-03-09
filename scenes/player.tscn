@@ -4,14 +4,14 @@
 [ext_resource type="PackedScene" uid="uid://brg5cdb04i6ol" path="res://assets/player/Figure.glb" id="2_g2els"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3vyb7"]
-size = Vector3(1, 1.7946777, 1)
+size = Vector3(0.6699219, 0.40411377, 0.38208008)
 
 [node name="Player" type="CharacterBody3D" unique_id=933397842]
 script = ExtResource("1_g2els")
 metadata/_custom_type_script = "uid://dj11m1vpoou2h"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1176721564]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8824463, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.026367188, 0.1871643, 0.0010986328)
 shape = SubResource("BoxShape3D_3vyb7")
 
 [node name="Model" parent="." unique_id=2091457452 instance=ExtResource("2_g2els")]
