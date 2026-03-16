@@ -2,8 +2,24 @@ extends Node3D
 class_name MapLayer
 
 
+enum RoomType{REGULAR}
 enum CellType{WALL, BRIDGE, ROOM, START}
 enum CellState{OUT_OF_GRID, USED, FREE}
+
+
+class Room:
+	var type: AABB
+	var enter: Vector3
+	var exits: Array[Vector3]
+
+
+	func _init(coords: Vector2i, map: MapLayer, n_enter: Vector2i) -> void:
+		enter = Vector3(n_enter.x, 0, n_enter.y)
+		for cell in map.get_near_cells(coords):
+			if cell != n_enter:
+				exits.append(Vector3(cell.x, 0.5, cell.y))
+		print("Enter: ", enter)
+		print("Exits: ", exits)
 
 
 class Cell:
@@ -11,6 +27,8 @@ class Cell:
 	var y: int
 	var type: CellType
 	var dir: Vector2i
+	var content: Room
+	var visited = false
 
 	func _init(coords: Vector2i, p_type: CellType, p_dir: Vector2i) -> void:
 		y = coords.y
@@ -23,12 +41,13 @@ var width: int
 var height: int
 var s_cell := Vector2i.ZERO
 var grid: Array = []
+#var simple_grid: Array = []
 
 const DIRECTIONS = [
-	Vector2i(0, 1),		#UP
-	Vector2i(1, 0), 	#RIGHT
-	Vector2i(0, -1), 	#DOWN
-	Vector2i(-1, 0)		#LEFT
+	Vector2i(0, 1),
+	Vector2i(1, 0),
+	Vector2i(0, -1),
+	Vector2i(-1, 0)
 ]
 
 
@@ -46,7 +65,8 @@ func _init(n_width: int, n_height: int) -> void:
 	change_cell(s_cell, CellType.START, Vector2i.ZERO)
 
 	generate_labyrinth()
-	print_grid()
+	#simple_grid = get_simple_grid()
+	#print_grid()
 
 
 func change_cell(coords: Vector2i, p_type: CellType, p_dir: Vector2i) -> void:
@@ -95,13 +115,20 @@ func get_poss_cells(coords: Vector2i) -> Array:
 	return cells
 
 
+func get_near_cells(coords: Vector2i) -> Array:
+	var cells = []
+	for dir in DIRECTIONS:
+		if get_cell_state(coords+dir) == CellState.USED:
+			cells.append(dir)
+	return cells
+
 func generate_labyrinth() -> void:
 	var curr_cell := s_cell
 	var priority_cells := [curr_cell]
 	var content_value := height * width * 0.5
 
 	for _i in range(content_value):
-		var way_lenght = randi_range(3, 5)
+		var way_lenght = randi_range(1, 3)
 		for _a in range(way_lenght):
 			var poss_cells = get_poss_cells(curr_cell)
 			if poss_cells.is_empty():
@@ -111,8 +138,9 @@ func generate_labyrinth() -> void:
 					curr_cell = priority_cells[0]
 				break
 
-			poss_cells.shuffle()
-			var n_cell = poss_cells[0]
+			#poss_cells.shuffle()
+			var indx = randi_range(0, len(poss_cells)-1)
+			var n_cell = poss_cells[indx]
 			change_cell(Vector2i(n_cell.x, n_cell.y), CellType.BRIDGE, n_cell.dir)
 			n_cell.y += n_cell.dir.y
 			n_cell.x += n_cell.dir.x
@@ -155,3 +183,16 @@ func get_simple_grid() -> Array:
 			column.append(grid[y][x].type)
 		simple_grid.append(column)
 	return simple_grid
+
+
+func generate_room(coords: Vector2i, player_grid_pos: Vector2i) -> void:
+#	Generating room's data(content) depending on the diff factors
+	grid[coords.x][coords.y].content = Room.new(coords, self, player_grid_pos)
+
+
+func build_room(coords: Vector2i, map: MapLayer) -> Node3D:
+#	Graphic 'building' room with content it contains
+	var cell = map.grid[coords.x][coords.y]
+	var room = preload("res://scenes/map/room.tscn").instantiate()
+
+	return room
