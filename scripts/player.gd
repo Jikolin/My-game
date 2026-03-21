@@ -3,13 +3,17 @@ class_name Player
 
 
 signal enter_the_room(coords: Vector2i)
+var map_pos: Vector3
+signal exit_the_room()
 
 var speed := 3.5
 var target_velocity = Vector3.ZERO
+
 var step_speed := 3
 const step_size := 2
 var is_moving := false
 var is_in_the_room := false
+
 var target_pos := Vector3.ZERO
 var target_rot := Basis.IDENTITY
 
@@ -38,7 +42,7 @@ func setup(i_map_grid: Array, pos: Vector2i) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_in_the_room:
+	if !is_in_the_room:
 		if event.is_action_pressed("right"):
 			_try_move(Vector3(1, 0, 0))
 		elif event.is_action_pressed("left"):
@@ -47,6 +51,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			_try_move(Vector3(0, 0, -1))
 		elif event.is_action_pressed("down"):
 			_try_move(Vector3(0, 0, 1))
+
+		if !is_moving:
+			if event.is_action_pressed("switch_map"):
+				map_pos = position
+				enter_the_room.emit(Vector2i(position.x-0.5, position.z-0.5))
+				is_in_the_room = true
+
+	#elif !is_moving:
+	else:	
+		if event.is_action_pressed("switch_map"):
+			exit_the_room.emit()
+			is_in_the_room = false
+			position = map_pos
 
 
 func _try_move(direction: Vector3):
@@ -58,7 +75,7 @@ func _try_move(direction: Vector3):
 
 
 func _physics_process(delta: float) -> void:
-	if is_moving and !is_in_the_room:
+	if is_moving:
 		var new_pos = position.move_toward(target_pos, step_speed * delta)
 		var curr_basis = basis
 		position = new_pos
@@ -69,7 +86,7 @@ func _physics_process(delta: float) -> void:
 			is_moving = false
 			_show_poss_moves()
 
-	elif is_in_the_room:
+	if is_in_the_room:
 		var direction = Vector3.ZERO
 
 		if Input.is_action_pressed("right"):
@@ -83,22 +100,19 @@ func _physics_process(delta: float) -> void:
 
 		if direction != Vector3.ZERO:
 			direction = direction.normalized()
-			# Setting the basis property will affect the rotation of the node.
 			target_rot = Basis.looking_at(-direction, Vector3.UP)
 			var curr_basis = basis
 			basis = curr_basis.slerp(target_rot, 0.25)
-			
 
-		# Ground Velocity
 		target_velocity.x = direction.x * speed
 		target_velocity.z = direction.z * speed
 
 		velocity = target_velocity
 		move_and_slide()
 
-	elif !is_in_the_room:
-		enter_the_room.emit(Vector2i(position.x-0.5, position.z-0.5))
-		is_in_the_room = true
+	#elif !is_in_the_room:
+		#enter_the_room.emit(Vector2i(position.x-0.5, position.z-0.5))
+		#is_in_the_room = true
 
 
 func _is_move_possible(direction: Vector3) -> bool:
@@ -112,8 +126,6 @@ func _is_move_possible(direction: Vector3) -> bool:
 
 
 func _show_poss_moves() -> void:
-	if not is_inside_tree():
-		pass
 	for dir in DIRECTIONS:
 		if _is_move_possible(Vector3(dir.x, 0, dir.y)):
 			var indicator = move_indicator.instantiate()

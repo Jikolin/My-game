@@ -7,8 +7,9 @@ enum CellType{WALL, BRIDGE, ROOM, START}
 enum CellState{OUT_OF_GRID, USED, FREE}
 
 
+
 class Room:
-	var type: AABB
+	#var type: AABB
 	var enter: Vector3
 	var exits: Array[Vector3]
 
@@ -18,8 +19,6 @@ class Room:
 		for cell in map.get_near_cells(coords):
 			if cell != n_enter:
 				exits.append(Vector3(cell.x, 0.5, cell.y))
-		print("Enter: ", enter)
-		print("Exits: ", exits)
 
 
 class Cell:
